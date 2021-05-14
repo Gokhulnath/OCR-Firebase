@@ -32,12 +32,20 @@
             android:layout_weight="1"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/bottom_sheet_recycler_view"
+        <TextView
+            android:id="@+id/tv_result"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:visibility="gone"/>
+            android:visibility="gone"
+            android:padding="20dp"/>
+
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/bottom_sheet_recycler_view"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:visibility="gone"/>-->
 
     </LinearLayout>
     <ImageButton

@@ -1,13 +1,20 @@
 package com.android.ocrfirebase;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
@@ -18,8 +25,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,11 +46,14 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -51,16 +63,16 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
     ImageView text_recognition_image_view;
     ImageButton bottom_sheet_button;
-//    RecyclerView bottom_sheet_recycler_view;
     TextView tv_result;
     Toolbar toolbar;
-    TextRecognitionAdapter textRecognitionAdapter;
-    ArrayList<TextRecognitionModel> textRecognitionModelArrayList;
     String final_result;
     List<String> states;
     List<String> keyword;
     List<String> scan;
-    int CAMERA_PICTURE = 1;
+    ContentValues values;
+    Uri imageUri;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    private String pictureImagePath = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,41 +87,58 @@ public class TextRecognitionActivity extends AppCompatActivity {
         final_result= " ";
         scan = new ArrayList<String>();
         bottom_sheet_button.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View view) {
-                CropImage.activity()
-                        .setGuidelines(CropImageView.Guidelines.ON)
-                        .start(TextRecognitionActivity.this);
+                if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    values = new ContentValues();
+                    values.put(MediaStore.Images.Media.TITLE, "New Picture");
+                    values.put(MediaStore.Images.Media.DESCRIPTION, "From your Camera");
+                    imageUri = getContentResolver().insert(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                } else {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA}, 100);
+                }
             }
         });
-        textRecognitionModelArrayList = new ArrayList<TextRecognitionModel>();
-        textRecognitionAdapter = new TextRecognitionAdapter(new ArrayList<>(), this);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
-//        bottom_sheet_recycler_view.setLayoutManager(linearLayoutManager);
-//        bottom_sheet_recycler_view.setAdapter(textRecognitionAdapter);
-        textRecognitionAdapter.setTextRecognitionArrayList(textRecognitionModelArrayList);
 
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-
-            if (resultCode == Activity.RESULT_OK) {
-                Uri imageUri = result.getUri();
-                try {
-                    analyzeImage(MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
-                Toast.makeText(this, "Error occured", Toast.LENGTH_SHORT).show();
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            try {
+                Bitmap picture = MediaStore.Images.Media.getBitmap(
+                        getContentResolver(), imageUri);
+                analyzeImage(picture);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+//            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+//
+//            if (resultCode == Activity.RESULT_OK) {
+//                Uri imageUri = result.getUri();
+//                try {
+//                    analyzeImage(MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+//                Toast.makeText(this, "Error occured", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 
     private void analyzeImage(Bitmap image) {
         if (image == null) {
@@ -118,8 +147,6 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         text_recognition_image_view.setImageBitmap(null);
-        textRecognitionModelArrayList.clear();
-        textRecognitionAdapter.notifyDataSetChanged();
         final_result= " ";
         scan.clear();
         tv_result.setVisibility(View.VISIBLE);
@@ -133,6 +160,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
                         Bitmap mutableImage = image.copy(Bitmap.Config.ARGB_8888, true);
                         recognizeText(text, mutableImage);
                         text_recognition_image_view.setImageBitmap(mutableImage);
+//                        tv_result.setText(final_result);
                         try {
                             tv_result.setText(Extract_data(scan,final_result));
                         } catch (JSONException e) {
@@ -168,7 +196,6 @@ public class TextRecognitionActivity extends AppCompatActivity {
             for (Text.Line line : block.getLines()) {
                 canvas.drawRect(line.getBoundingBox(), rectPaint);
                 canvas.drawText(Integer.toString(index), line.getCornerPoints()[2].x, line.getCornerPoints()[2].y, textPaint);
-                textRecognitionModelArrayList.add(new TextRecognitionModel(index++, line.getText()));
                 final_result += line.getText() + "\n";
                 scan.add(line.getText());
             }
@@ -216,6 +243,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
             }
         }
         SimpleDateFormat format2 = new SimpleDateFormat("MM-dd-yyyy");
+        Collections.sort(date,new SortByDate());
         json.put("DOB", format2.format(date.get(0)));
         json.put("ISSUE", format2.format(date.get(1)));
         json.put("EXPIRY", format2.format(date.get(2)));
@@ -357,5 +385,15 @@ public class TextRecognitionActivity extends AppCompatActivity {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(json);
 
+    }
+
+
+    static class SortByDate implements Comparator<Date> {
+
+
+        @Override
+        public int compare(Date a, Date b) {
+            return a.compareTo(b);
+        }
     }
 }

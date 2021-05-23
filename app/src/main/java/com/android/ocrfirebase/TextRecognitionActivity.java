@@ -46,7 +46,9 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -176,6 +178,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 });
     }
 
+
     private void recognizeText(Text result, Bitmap image) {
         if (result == null || image == null) {
             Toast.makeText(TextRecognitionActivity.this, "There was some error", Toast.LENGTH_SHORT).show();
@@ -216,7 +219,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         keyword = Arrays.asList("pennsylvania", "driver's", "drivers", "driver", "license", "visit", "dln",
                 "dob", "exp", "sex", "hgt", "eyes", "class", "end", "restr", "dups", "dd", "dl",
-                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa","organ", "donor","sample","commercial", "cdl", "driver");
+                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa","organ", "donor","sample","commercial", "cdl", "driver", "MAINSTREET", "CLA");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -370,15 +373,29 @@ public class TextRecognitionActivity extends AppCompatActivity {
         ArrayList<String> name = new ArrayList<String>();
         String nameData="";
         for(String line:data){
-            Matcher mname = Pattern.compile("[A-Z]*").matcher(line);
+            Matcher mname = Pattern.compile("\\b[A-Z]*\\b").matcher(line);
             while (mname.find()) {
-                name.add(mname.group(0).trim());
+                String temp = mname.group(0).trim();
+                for(String m:keywords){
+                    if(!temp.toLowerCase().contains(m.toLowerCase())){
+                        name.add(temp);
+                        break;
+                    }
+                }
             }
+            Matcher m2name = Pattern.compile("\\b2[A-Z]*\\b").matcher(line);
+            while (m2name.find()) {
+                name.add(m2name.group(0).trim().substring(1));
+                break;
+            }
+
         }
+
+
         for(String n:name){
-            if(n.length()>2){
-                nameData+=n+" ";
-            }
+                if (n.length() > 2 && n.length() < 15 && !keywords.contains(n)) {
+                    nameData += n + " ";
+                }
         }
         json.put("NAME",nameData);
 

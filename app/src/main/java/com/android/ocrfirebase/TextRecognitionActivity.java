@@ -219,7 +219,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         keyword = Arrays.asList("pennsylvania", "driver's", "drivers", "driver", "license", "visit", "dln",
                 "dob", "exp", "sex", "hgt", "eyes", "class", "end", "restr", "dups", "dd", "dl",
-                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa","organ", "donor","sample","commercial", "cdl", "driver", "MAINSTREET", "CLA");
+                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -246,7 +246,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
             }
         }
         SimpleDateFormat format2 = new SimpleDateFormat("MM-dd-yyyy");
-        Collections.sort(date,new SortByDate());
+        Collections.sort(date, new SortByDate());
         json.put("DOB", format2.format(date.get(0)));
         json.put("ISSUE", format2.format(date.get(1)));
         json.put("EXPIRY", format2.format(date.get(2)));
@@ -315,69 +315,71 @@ public class TextRecognitionActivity extends AppCompatActivity {
         Matcher mclass = Pattern.compile("CLASS:? .|class:? .").matcher(dat);
         while (mclass.find()) {
             String cl = mclass.group(0);
-            if(cl.length()>0) {
+            if (cl.length() > 0) {
                 json.put("CLASS", mclass.group(0).split(" ")[1].trim());
-            }
-            else{
-                json.put("CLASS","");
+            } else {
+                json.put("CLASS", "");
             }
         }
 
         //cleaning data
-        for(int j=0;j<data.size();j++){
+        for (int j = 0; j < data.size(); j++) {
             Matcher m1 = Pattern.compile("[0-9][0-9][/|-][0-9][0-9][/|-][0-9][0-9][0-9][0-9]").matcher(data.get(j));
             while (m1.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m2 = Pattern.compile("DLN:? .*").matcher(data.get(j));
             while (m2.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m3 = Pattern.compile("[0-9]-[0-9][0-9]|[0-9]'-[0-9][0-9]''|[0-9]'[0-9][0-9]''").matcher(data.get(j));
             while (m3.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m4 = Pattern.compile("SEX:? [FM]|Sex:? [FM]").matcher(data.get(j));
             while (m4.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m5 = Pattern.compile(" BLU| BLK| BRO| GRY| GRN| HAZ| MAR| MUL| PNK| XXX").matcher(data.get(j));
             while (m5.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m6 = Pattern.compile("RESTR: .{1,5}|RESTRICTIONS: .{1,5}|Restr: .{1,5}|Restrictions: .{1,5}|End:? .{1,5}|ENDORSE:? .{1,5}|END:? .{1,5}|Endorse:? .{1,5}").matcher(data.get(j));
             while (m6.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m7 = Pattern.compile("CLASS: .|class: .").matcher(data.get(j));
             while (m7.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             Matcher m8 = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)").matcher(data.get(j));
             while (m8.find()) {
-                data.set(j,"");
+                data.set(j, "");
             }
             String temp = data.get(j);
             String end = "";
-            for(String key:temp.split("\\W+")){
-                if(!keywords.contains(key.toLowerCase())){
+            for (String key : temp.split("\\W+")) {
+                if (!keywords.contains(key.toLowerCase())) {
                     end += key;
                 }
             }
-            data.set(j,end);
+            data.set(j, end);
         }
 
-        Log.d("fuck",data.toString());
+        Log.d("fuck", data.toString());
 
         //Name
+        int flag = -1;
         ArrayList<String> name = new ArrayList<String>();
-        String nameData="";
-        for(String line:data){
+        String nameData = "";
+        String firstName = "";
+        String lastName = "";
+        for (String line : data) {
             Matcher mname = Pattern.compile("\\b[A-Z]*\\b").matcher(line);
             while (mname.find()) {
                 String temp = mname.group(0).trim();
-                for(String m:keywords){
-                    if(!temp.toLowerCase().contains(m.toLowerCase())){
+                for (String m : keywords) {
+                    if (!temp.toLowerCase().contains(m.toLowerCase())) {
                         name.add(temp);
                         break;
                     }
@@ -385,22 +387,41 @@ public class TextRecognitionActivity extends AppCompatActivity {
             }
             Matcher m2name = Pattern.compile("\\b2[A-Z]*\\b").matcher(line);
             while (m2name.find()) {
-                name.add(m2name.group(0).trim().substring(1));
+                name.clear();
+                firstName = m2name.group(0).trim().substring(1);
+                break;
+            }
+
+            Matcher m1name = Pattern.compile("\\b1[A-Z]*\\b").matcher(line);
+            while (m1name.find()) {
+                name.clear();
+                lastName = m1name.group(0).trim().substring(1);
                 break;
             }
 
         }
 
-
-        for(String n:name){
+        if (!firstName.isEmpty() && !lastName.isEmpty()) {
+            nameData = firstName + " " + lastName;
+        }
+        else{
+            if(!firstName.isEmpty()){
+                nameData += firstName;
+            }
+            if(!lastName.isEmpty()){
+                nameData += lastName;
+            }
+            for (String n : name) {
                 if (n.length() > 2 && n.length() < 15 && !keywords.contains(n)) {
                     nameData += n + " ";
                 }
+            }
         }
-        json.put("NAME",nameData);
+        json.put("NAME", nameData);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         return gson.toJson(json);
+
 
     }
 

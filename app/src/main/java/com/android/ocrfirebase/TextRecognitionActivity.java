@@ -264,13 +264,13 @@ public class TextRecognitionActivity extends AppCompatActivity {
             if (addr.find()) {
                 Matcher addr1 = Pattern.compile("^[0-9]+").matcher(data.get(j - 1));
                 if (addr1.find()) {
-                    address = data.get(j - 1) + "\n" + data.get(j);
+                    address = data.get(j - 1).trim() + ", " + data.get(j).trim();
                     data.remove(j - 1);
                     data.remove(j - 1);
                 } else {
                     Matcher addr2 = Pattern.compile("^[0-9]+").matcher(data.get(j - 2));
                     if (addr2.find()) {
-                        address = data.get(j - 2) + "\n" + data.get(j - 1) + "\n" + data.get(j);
+                        address = data.get(j - 2).trim() + ", " + data.get(j - 1).trim() + ", " + data.get(j).trim();
                         data.remove(j - 1);
                         data.remove(j - 1);
                         data.remove(j - 1);
@@ -279,7 +279,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 break;
             }
         }
-        json.put("ADDRESS", address);
+        json.put("ADDRESS", address.substring(1));
 
         //Height
         Matcher mh = Pattern.compile("[0-9]-[0-9][0-9]|[0-9]'-[0-9][0-9]''|[0-9]'[0-9][0-9]''").matcher(dat);
@@ -411,9 +411,11 @@ public class TextRecognitionActivity extends AppCompatActivity {
             if(!lastName.isEmpty()){
                 nameData += lastName;
             }
+            int i=0;
             for (String n : name) {
-                if (n.length() > 2 && n.length() < 15 && !keywords.contains(n)) {
+                if (n.length() > 2 && n.length() < 15 && !keywords.contains(n) && i<2) {
                     nameData += n + " ";
+                    i++;
                 }
             }
         }

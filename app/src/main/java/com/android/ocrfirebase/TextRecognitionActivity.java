@@ -265,7 +265,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*|DL:? .*|DL NO. .*").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )").matcher(dat);
         while (mDL.find()) {
             Log.d("fuck",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
@@ -293,7 +293,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER 3
-        Matcher mDL4 = Pattern.compile("LIC[a-zA-Z0-9]*|LiC[a-zA-Z0-9]*|lic[a-zA-Z0-9]*").matcher(dat);
+        Matcher mDL4 = Pattern.compile("LIC(?!ENSE)[a-zA-Z0-9]*|LiC(?!ENSE)[a-zA-Z0-9]*|lic(?!ense)[a-zA-Z0-9]*").matcher(dat);
         while (mDL4.find()) {
             json.put("DLN", mDL4.group(0).substring(3).trim());
         }

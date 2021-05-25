@@ -206,6 +206,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
     }
 
     private String Extract_data(List<String> d, String dat) throws JSONException {
+        Log.d("fuck", dat);
         ArrayList<String> data = new ArrayList<String>(d);
         JSONObject json = new JSONObject();
         states = Arrays.asList("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
@@ -225,8 +226,8 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //State
         for (String state : states) {
             for (int i = 0; i < 4; i++) {
-                if (data.get(i).contains(state)) {
-                    json.put("STATE", state);
+                if (data.get(i).toLowerCase().contains(state.toLowerCase())) {
+                    json.put("STATE", state.toUpperCase());
                     data.remove(i);
                 }
             }
@@ -247,14 +248,56 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
         SimpleDateFormat format2 = new SimpleDateFormat("MM-dd-yyyy");
         Collections.sort(date, new SortByDate());
-        json.put("DOB", format2.format(date.get(0)));
-        json.put("ISSUE", format2.format(date.get(1)));
-        json.put("EXPIRY", format2.format(date.get(2)));
+        if(date.size()>0 && !format2.format(date.get(0)).isEmpty())
+        {
+            json.put("DOB", format2.format(date.get(0)));
+
+        }
+        if(date.size()>1 && !format2.format(date.get(1)).isEmpty())
+        {
+            json.put("ISSUE", format2.format(date.get(1)));
+
+        }
+        if(date.size()>2 && !format2.format(date.get(2)).isEmpty())
+        {
+            json.put("EXPIRY", format2.format(date.get(2)));
+
+        }
 
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*|DL:? .*").matcher(dat);
         while (mDL.find()) {
-            json.put("DLN", mDL.group(0).split(":")[1].trim());
+            if(mDL.group(0).split(":").length!=1){
+                json.put("DLN", mDL.group(0).split(":")[1].trim());
+            }
+            else {
+                json.put("DLN", mDL.group(0).split(" ")[1].trim());
+            }
+        }
+
+        //DRIVER LICENSE NUMBER 2
+        Matcher mDL2 = Pattern.compile("LIC NO:? ?.*|LiC NO:? ?.*|lic NO:? ?.*").matcher(dat);
+        while (mDL2.find()) {
+            json.put("DLN", mDL2.group(0).split("NO")[1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 3
+        Matcher mDL3 = Pattern.compile("LIC#[a-zA-Z0-9]*|LiC#[a-zA-Z0-9]*|lic#[a-zA-Z0-9]*").matcher(dat);
+        while (mDL3.find()) {
+            Log.d("fuck",mDL3.group(0));
+            json.put("DLN", mDL3.group(0).split("#")[1].trim());
+        }
+
+        //DD
+        Matcher mDD = Pattern.compile("DD:? .*").matcher(dat);
+        while (mDD.find()) {
+            json.put("DD", mDD.group(0).split(" ")[1].trim());
+        }
+
+        //TYPe
+        Matcher mtype = Pattern.compile("TYPE:? ?.*").matcher(dat);
+        while (mtype.find()) {
+            json.put("TYPE", mtype.group(0).split(" ")[1].trim());
         }
 
         //Address
@@ -279,7 +322,9 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 break;
             }
         }
-        json.put("ADDRESS", address.substring(1));
+        if(address.length()!=0){
+            json.put("ADDRESS", address.substring(1));
+        }
 
         //Height
         Matcher mh = Pattern.compile("[0-9]-[0-9][0-9]|[0-9]'-[0-9][0-9]''|[0-9]'[0-9][0-9]''").matcher(dat);
@@ -287,22 +332,38 @@ public class TextRecognitionActivity extends AppCompatActivity {
             json.put("HEIGHT", mh.group(0));
         }
 
+        //Weight
+        Matcher mw = Pattern.compile("WGT:? ?[0-9]*|Wgt:? ?[0-9]*").matcher(dat);
+        while (mw.find()) {
+            if(mw.group(0).split(":").length!=1){
+                json.put("WEIGHT", mw.group(0).split(":")[1].trim()+" lbs");
+            }
+            else{
+                json.put("WEIGHT", mw.group(0).split(" ")[1].trim()+" lbs");
+            }
+        }
+
         //Sex
         Matcher msex = Pattern.compile("SEX:? [FM]|Sex:? [FM]").matcher(dat);
         while (msex.find()) {
-            json.put("SEX", msex.group(0).split(":")[1].trim());
+            if(msex.group(0).split(":").length!=1){
+                json.put("SEX", msex.group(0).split(":")[1].trim());
+            }
+            else{
+                json.put("SEX", msex.group(0).split(" ")[1].trim());
+            }
         }
 
         //Eye
-        Matcher meye = Pattern.compile(" BLU| BLK| BRO| GRY| GRN| HAZ| MAR| MUL| PNK| XXX").matcher(dat);
+        Matcher meye = Pattern.compile(" BLU| BLK| BRO| GRY| GRN| HAZ| MAR| MUL| PNK| XXX| BRN| DIC").matcher(dat);
         while (meye.find()) {
             json.put("EYE", meye.group(0));
         }
 
         //Restriction
-        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)").matcher(dat);
+        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)RSTR:? (NONE|.)").matcher(dat);
         while (mres.find()) {
-            json.put("RESTRICTION", mres.group(0).split(" ")[1].trim());
+            json.put("RESTRICTION", "NONE");//mres.group(0).split(" ")[1].trim()
         }
 
         //Endorse
@@ -406,15 +467,30 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
         else{
             if(!firstName.isEmpty()){
-                nameData += firstName;
+                if(firstName.charAt(0)=='L' && firstName.charAt(1)=='N' || firstName.charAt(0)=='F' && firstName.charAt(1)=='N')
+                {
+                    nameData += firstName.substring(2);
+                }else {
+                    nameData += firstName;
+                }
             }
             if(!lastName.isEmpty()){
-                nameData += lastName;
+                if(lastName.charAt(0)=='F' && lastName.charAt(1)=='N' || lastName.charAt(0)=='L' && lastName.charAt(1)=='N')
+                {
+                    nameData += lastName.substring(2);
+                }else {
+                    nameData += lastName;
+                }
             }
             int i=0;
             for (String n : name) {
                 if (n.length() > 2 && n.length() < 15 && !keywords.contains(n) && i<2) {
-                    nameData += n + " ";
+                    if(n.charAt(0)=='F' && n.charAt(1)=='N' || n.charAt(0)=='L' && n.charAt(1)=='N') {
+                        nameData += n.substring(2) + " ";
+                    }
+                    else{
+                        nameData += n + " ";
+                    }
                     i++;
                 }
             }

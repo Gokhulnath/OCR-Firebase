@@ -265,13 +265,18 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*|DL:? .*").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*|DL:? .*|DL NO. .*").matcher(dat);
         while (mDL.find()) {
+            Log.d("fuck",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
                 json.put("DLN", mDL.group(0).split(":")[1].trim());
             }
             else {
-                json.put("DLN", mDL.group(0).split(" ")[1].trim());
+                if(mDL.group(0).split(" ")[1].trim().contains("NO")){
+                    json.put("DLN", mDL.group(0).split("NO")[1].split(" ")[1].trim());
+                }else{
+                    json.put("DLN", mDL.group(0).split(" ")[1].trim());
+                }
             }
         }
 
@@ -284,13 +289,19 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //DRIVER LICENSE NUMBER 3
         Matcher mDL3 = Pattern.compile("LIC#[a-zA-Z0-9]*|LiC#[a-zA-Z0-9]*|lic#[a-zA-Z0-9]*").matcher(dat);
         while (mDL3.find()) {
-            Log.d("fuck",mDL3.group(0));
             json.put("DLN", mDL3.group(0).split("#")[1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 3
+        Matcher mDL4 = Pattern.compile("LIC[a-zA-Z0-9]*|LiC[a-zA-Z0-9]*|lic[a-zA-Z0-9]*").matcher(dat);
+        while (mDL4.find()) {
+            json.put("DLN", mDL4.group(0).substring(3).trim());
         }
 
         //DD
         Matcher mDD = Pattern.compile("DD:? .*").matcher(dat);
         while (mDD.find()) {
+            Log.d("fuck", mDD.group(0));
             json.put("DD", mDD.group(0).split(" ")[1].trim());
         }
 
@@ -361,7 +372,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //Restriction
-        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)RSTR:? (NONE|.)").matcher(dat);
+        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)|RSTR:? (NONE|.)").matcher(dat);
         while (mres.find()) {
             json.put("RESTRICTION", mres.group(0).split(" ")[1].trim());
         }

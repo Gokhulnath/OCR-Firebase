@@ -206,7 +206,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
     }
 
     private String Extract_data(List<String> d, String dat) throws JSONException {
-        Log.d("fuck", dat);
+        Log.d("fuck", d.toString());
         ArrayList<String> data = new ArrayList<String>(d);
         JSONObject json = new JSONObject();
         states = Arrays.asList("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
@@ -303,7 +303,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //Address
         String address = "";
         for (int j = 0; j < data.size(); j++) {
-            Matcher addr = Pattern.compile(", [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]").matcher(data.get(j));
+            Matcher addr = Pattern.compile(", [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]|[A-Z][A-Z] [0-9]{5}-[0-9]{4}").matcher(data.get(j));
             if (addr.find()) {
                 Matcher addr1 = Pattern.compile("^[0-9]+").matcher(data.get(j - 1));
                 if (addr1.find()) {
@@ -363,7 +363,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //Restriction
         Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)RSTR:? (NONE|.)").matcher(dat);
         while (mres.find()) {
-            json.put("RESTRICTION", "NONE");//mres.group(0).split(" ")[1].trim()
+            json.put("RESTRICTION", mres.group(0).split(" ")[1].trim());
         }
 
         //Endorse

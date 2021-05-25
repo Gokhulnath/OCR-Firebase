@@ -86,6 +86,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         tv_result = findViewById(R.id.tv_result);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        tv_result.setMovementMethod(new ScrollingMovementMethod());
         final_result= " ";
         scan = new ArrayList<String>();
         bottom_sheet_button.setOnClickListener(new View.OnClickListener() {

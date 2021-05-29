@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -282,7 +283,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER 2
-        Matcher mDL2 = Pattern.compile("LIC NO:? ?.*|LiC NO:? ?.*|lic NO:? ?.*").matcher(dat);
+        Matcher mDL2 = Pattern.compile("LIC/. NO/.:? ?.*|LiC/. NO/.:? ?.*|lic/. NO/.:? ?.*").matcher(dat);
         while (mDL2.find()) {
             json.put("DLN", mDL2.group(0).split("NO")[1].trim());
         }
@@ -354,6 +355,13 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 json.put("WEIGHT", mw.group(0).split(" ")[1].trim()+" lbs");
             }
         }
+
+        //Weight
+        Matcher mw1 = Pattern.compile("[0-9]* lb|[0-9]* lbs|[0-9]* LBS|[0-9]* LB").matcher(dat);
+        while (mw1.find())
+            json.put("WEIGHT", mw1.group(0));
+
+
 
         //Sex
         Matcher msex = Pattern.compile("SEX:? [FM]|Sex:? [FM]").matcher(dat);

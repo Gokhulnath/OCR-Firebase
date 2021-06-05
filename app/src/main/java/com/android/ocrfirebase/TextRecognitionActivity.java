@@ -222,7 +222,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         keyword = Arrays.asList("pennsylvania", "driver's", "drivers", "driver", "license", "visit", "dln",
                 "dob", "exp", "sex", "hgt", "eyes", "class", "end", "restr", "dups", "dd", "dl",
-                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr");
+                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -237,19 +237,31 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         //Date
         ArrayList<Date> date = new ArrayList<>();
+        ArrayList<Date> date2 = new ArrayList<>();
         Matcher mDate = Pattern.compile("[0-9][0-9][/|-][0-9][0-9][/|-][0-9][0-9][0-9][0-9]").matcher(dat);
         SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyyy");
+        SimpleDateFormat format2 = new SimpleDateFormat("MM-dd-yyyy");
         while (mDate.find()) {
             String temp = mDate.group(0);
             try {
                 Date date1 = format.parse(temp);
                 date.add(date1);
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            try {
+                Date date1 = format2.parse(temp);
+                date2.add(date1);
+
             } catch (ParseException e) {
                 e.printStackTrace();
             }
         }
-        SimpleDateFormat format2 = new SimpleDateFormat("MM-dd-yyyy");
+
         Collections.sort(date, new SortByDate());
+        Collections.sort(date2, new SortByDate());
+
         if(date.size()>0 && !format2.format(date.get(0)).isEmpty())
         {
             json.put("DOB", format2.format(date.get(0)));
@@ -266,12 +278,32 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         }
 
+        if(date2.size()>0 && !format2.format(date2.get(0)).isEmpty())
+        {
+            json.put("DOB", format2.format(date2.get(0)));
+
+        }
+        if(date2.size()>1 && !format2.format(date2.get(1)).isEmpty())
+        {
+            json.put("ISSUE", format2.format(date2.get(1)));
+
+        }
+        if(date2.size()>2 && !format2.format(date2.get(date2.size()-1)).isEmpty())
+        {
+            json.put("EXPIRY", format2.format(date2.get(date2.size()-1)));
+
+        }
+
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DLH:? .*(?! )").matcher(dat);
         while (mDL.find()) {
             Log.d("fuck",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
-                json.put("DLN", mDL.group(0).split(":")[1].trim());
+                if(mDL.group(0).split(":")[1].trim().split(" ").length>1){
+                    json.put("DLN", mDL.group(0).split(":")[1].trim().split(" ")[0]);
+                }else{
+                    json.put("DLN", mDL.group(0).split(":")[1].trim());
+                }
             }
             else {
                 if(mDL.group(0).split(" ")[1].trim().contains("NO")){
@@ -294,10 +326,28 @@ public class TextRecognitionActivity extends AppCompatActivity {
             json.put("DLN", mDL3.group(0).split("#")[1].trim());
         }
 
-        //DRIVER LICENSE NUMBER 3
+        //DRIVER LICENSE NUMBER 4
         Matcher mDL4 = Pattern.compile("LIC(?!ENSE)[a-zA-Z0-9]*|LiC(?!ENSE)[a-zA-Z0-9]*|lic(?!ense)[a-zA-Z0-9]*").matcher(dat);
         while (mDL4.find()) {
             json.put("DLN", mDL4.group(0).substring(3).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 7
+        Matcher mDL7 = Pattern.compile("LIC #: ?[a-zA-Z0-9]*|LiC #: ?[a-zA-Z0-9]*|lic #: ?[a-zA-Z0-9]*").matcher(dat);
+        while (mDL7.find()) {
+            json.put("DLN", mDL7.group(0).split(":")[1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 5
+        Matcher mDL5 = Pattern.compile("S[0-9]{8}|s[0-9]{8}").matcher(dat);
+        while (mDL5.find()) {
+            json.put("DLN", mDL5.group(0).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 6
+        Matcher mDL6 = Pattern.compile("E [0-9 ]{15}|e [0-9 ]{15}").matcher(dat);
+        while (mDL6.find()) {
+            json.put("DLN", mDL6.group(0).trim());
         }
 
         //DD
@@ -316,7 +366,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //Address
         String address = "";
         for (int j = 0; j < data.size(); j++) {
-            Matcher addr = Pattern.compile(", [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]|[A-Z][A-Z] [0-9]{5}-[0-9]{4}").matcher(data.get(j));
+            Matcher addr = Pattern.compile(",? [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]|[A-Z][A-Z] [0-9]{5}-[0-9]{4}").matcher(data.get(j));
             if (addr.find()) {
                 Matcher addr1 = Pattern.compile("^[0-9]+").matcher(data.get(j - 1));
                 if (addr1.find()) {
@@ -343,6 +393,11 @@ public class TextRecognitionActivity extends AppCompatActivity {
         Matcher mh = Pattern.compile("[0-9]-[0-9][0-9]|[0-9]'-[0-9][0-9]''|[0-9]'[0-9][0-9]''").matcher(dat);
         while (mh.find()) {
             json.put("HEIGHT", mh.group(0));
+        }
+
+        Matcher mh2 = Pattern.compile("Hgt [0-9]{3}|hgt [0-9]{3}").matcher(dat);
+        while (mh2.find()) {
+            json.put("HEIGHT", mh2.group(0).substring(4));
         }
 
         //Weight
@@ -374,8 +429,9 @@ public class TextRecognitionActivity extends AppCompatActivity {
             }
         }
 
+
         //Eye
-        Matcher meye = Pattern.compile(" BLU| BLK| BRO| GRY| GRN| HAZ| MAR| MUL| PNK| XXX| BRN| DIC").matcher(dat);
+        Matcher meye = Pattern.compile(" BLU| BLK| BRO| GRY| GRN| HAZ| MAR| MUL| PNK| XXX| BRN| DIC| BR0").matcher(dat);
         while (meye.find()) {
             json.put("EYE", meye.group(0));
         }

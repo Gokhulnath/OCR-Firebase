@@ -222,7 +222,10 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         keyword = Arrays.asList("pennsylvania", "driver's", "drivers", "driver", "license", "visit", "dln",
                 "dob", "exp", "sex", "hgt", "eyes", "class", "end", "restr", "dups", "dd", "dl",
-                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced", "dateofbirth");
+                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor",
+                "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced",
+                "dateofbirth", "auto","NOTINTENDED","FORFEDERAL", "PURPOSES", "not","intended","for",
+                "federal","NEW", "mexico","DRIVERLICENSE", "ego", "prize","alert", "hearing");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -295,7 +298,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DLH:? .*(?! )|DL#:?.*(?! )").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DL No.? .*(?! )|DLH:? .*(?! )|DL#:?.*(?! )").matcher(dat);
         while (mDL.find()) {
             Log.d("fuck",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
@@ -311,8 +314,19 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 }else{
                     json.put("DLN", mDL.group(0).split(" ")[1].trim());
                 }
+                if(mDL.group(0).split(" ")[1].trim().contains("No")){
+                    json.put("DLN", mDL.group(0).substring(6).split(" ")[1].trim());
+                }else{
+                    json.put("DLN", mDL.group(0).split(" ")[1].trim());
+                }
             }
         }
+
+//        //DRIVER LICENSE NUMBER 0
+//        Matcher mDL0 = Pattern.compile("^[0-9]$").matcher(dat);
+//        while (mDL0.find()) {
+//            json.put("DLN", mDL0.group(0).trim());
+//        }
 
         //DRIVER LICENSE NUMBER 2
         Matcher mDL2 = Pattern.compile("LIC/. NO/.:? ?.*|LiC/. NO/.:? ?.*|lic/. NO/.:? ?.*").matcher(dat);
@@ -321,9 +335,9 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER 3
-        Matcher mDL3 = Pattern.compile("LIC#[a-zA-Z0-9]*|LiC#[a-zA-Z0-9]*|lic#[a-zA-Z0-9]*").matcher(dat);
+        Matcher mDL3 = Pattern.compile("LIC# ?[a-zA-Z0-9]*|LiC# ?[a-zA-Z0-9]*|lic# ?[a-zA-Z0-9]*").matcher(dat);
         while (mDL3.find()) {
-            json.put("DLN", mDL3.group(0).split("#")[1].trim());
+            json.put("DLN", mDL3.group(0).substring(4).trim());
         }
 
         //DRIVER LICENSE NUMBER 4
@@ -351,15 +365,45 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER 8
-        Matcher mDL8 = Pattern.compile("License No. [a-zA-Z0-9]*").matcher(dat);
+        Matcher mDL8 = Pattern.compile("License No. [a-zA-Z0-9]*|LICENSE NO. [a-zA-Z0-9]*").matcher(dat);
         while (mDL8.find()) {
-            json.put("DLN", mDL8.group(0).split("No.")[1].trim());
+            json.put("DLN", mDL8.group(0).substring(11).trim());
         }
 
         //DRIVER LICENSE NUMBER 9
         Matcher mDL9 = Pattern.compile("LIC. NO. [a-zA-Z0-9-]*|LiC. NO. [a-zA-Z0-9-]*|lic. NO. [a-zA-Z0-9-]*").matcher(dat);
         while (mDL9.find()) {
             json.put("DLN", mDL9.group(0).split("NO.")[1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 10
+        Matcher mDL10 = Pattern.compile("DL [a-zA-Z0-9]{5} [a-zA-Z0-9]{5} [a-zA-Z0-9]{5}").matcher(dat);
+        while (mDL10.find()) {
+            json.put("DLN", mDL10.group(0).substring(3).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 11
+        Matcher mDL11 = Pattern.compile("License ?# [0-9]{9}").matcher(dat);
+        while (mDL11.find()) {
+            json.put("DLN", mDL11.group(0).split(" ")[mDL11.group(0).split(" ").length-1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 12
+        Matcher mDL12 = Pattern.compile("NO [A-Z][0-9]{6}").matcher(dat);
+        while (mDL12.find()) {
+            json.put("DLN", mDL12.group(0).split(" ")[mDL12.group(0).split(" ").length-1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 13
+        Matcher mDL13 = Pattern.compile("NO. ?[0-9]{9}").matcher(dat);
+        while (mDL13.find()) {
+            json.put("DLN", mDL13.group(0).substring(3).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 14
+        Matcher mDL14 = Pattern.compile("LIC#[0-9A-Z].*$]").matcher(dat);
+        while (mDL14.find()) {
+            json.put("DLN", mDL14.group(0).substring(4).trim());
         }
 
         //DD
@@ -378,7 +422,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //Address
         String address = "";
         for (int j = 0; j < data.size(); j++) {
-            Matcher addr = Pattern.compile(",? [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]|[A-Z][A-Z] [0-9]{5}-[0-9]{4}").matcher(data.get(j));
+            Matcher addr = Pattern.compile(",? [A-Z][A-Z] [[0-9][0-9][0-9][0-9][0-9]|[0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9]]|[A-Z][A-Z] [0-9]{5}-[0-9]{4}|[A-Z][A-Z], [0-9]{5}").matcher(data.get(j));
             if (addr.find()) {
                 Matcher addr1 = Pattern.compile("^[0-9]+").matcher(data.get(j - 1));
                 if (addr1.find()) {
@@ -401,6 +445,11 @@ public class TextRecognitionActivity extends AppCompatActivity {
             json.put("ADDRESS", address.substring(1));
         }
 
+        Matcher mh3 = Pattern.compile("HEIGHT [0-9]'?[0-9][0-9]'?'?").matcher(dat);
+        while (mh3.find()) {
+            json.put("HEIGHT", mh3.group(0).split(" ")[1].trim());
+        }
+
         //Height
         Matcher mh = Pattern.compile("[0-9]-[0-9][0-9]|[0-9]'-[0-9][0-9]''|[0-9]'[0-9][0-9]''").matcher(dat);
         while (mh.find()) {
@@ -412,14 +461,17 @@ public class TextRecognitionActivity extends AppCompatActivity {
             json.put("HEIGHT", mh2.group(0).substring(4));
         }
 
+
         //Weight
-        Matcher mw = Pattern.compile("WGT:? ?[0-9]*|Wgt:? ?[0-9]*").matcher(dat);
+        Matcher mw = Pattern.compile("WGT:? ?[0-9]*|Wgt:? ?[0-9]*|WEIGHT:? ?[0-9]{3}").matcher(dat);
         while (mw.find()) {
             if(mw.group(0).split(":").length!=1){
                 json.put("WEIGHT", mw.group(0).split(":")[1].trim()+" lbs");
             }
             else{
-                json.put("WEIGHT", mw.group(0).split(" ")[1].trim()+" lbs");
+                if(mw.group(0).split(" ").length>1){
+                    json.put("WEIGHT", mw.group(0).split(" ")[1].trim()+" lbs");
+                }
             }
         }
 
@@ -431,7 +483,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
 
         //Sex
-        Matcher msex = Pattern.compile("SEX:? [FM]|Sex:? [FM]").matcher(dat);
+        Matcher msex = Pattern.compile("SEX:? [FM]|Sex:? [FM]|SEx:? [FM]").matcher(dat);
         while (msex.find()) {
             if(msex.group(0).split(":").length!=1){
                 json.put("SEX", msex.group(0).split(":")[1].trim());
@@ -449,15 +501,17 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //Restriction
-        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)|RSTR:? (NONE|.)").matcher(dat);
+        Matcher mres = Pattern.compile("RESTR:? (NONE|.)|RESTRICTIONS:? (NONE|.)|Restr:? (NONE|.)|Restrictions:? (NONE|.)|REST:? (NONE|.)|RSTR:? (NONE|.)|^R:? (NONE|.)").matcher(dat);
         while (mres.find()) {
             json.put("RESTRICTION", mres.group(0).split(" ")[1].trim());
         }
 
         //Endorse
-        Matcher mend = Pattern.compile("End:? (NONE|.)|ENDORSE:? (NONE|.)|END:? (NONE|.)|Endorse:? (NONE|.)").matcher(dat);
+        Matcher mend = Pattern.compile("End:? (NONE|.)|ENDORSE:? (NONE|.)|END:? ?(NONE|.)|Endorse:? (NONE|.)|^E:? (NONE|.)").matcher(dat);
         while (mend.find()) {
-            json.put("ENDORSE", mend.group(0).split(" ")[1].trim());
+            if(mend.group(0).split(" ").length>1){
+                json.put("ENDORSE", mend.group(0).split(" ")[1].trim());
+            }
         }
 
         //Class
@@ -465,7 +519,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         while (mclass.find()) {
             String cl = mclass.group(0);
             if (cl.length() > 0) {
-                json.put("CLASS", mclass.group(0).split(" ")[1].trim());
+                json.put("CLASS", mclass.group(0).substring(6).trim());
             } else {
                 json.put("CLASS", "");
             }

@@ -295,7 +295,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //DRIVER LICENSE NUMBER
-        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DLH:? .*(?! )").matcher(dat);
+        Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DLH:? .*(?! )|DL#:?.*(?! )").matcher(dat);
         while (mDL.find()) {
             Log.d("fuck",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
@@ -461,7 +461,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         }
 
         //Class
-        Matcher mclass = Pattern.compile("CLASS:? .|class:? .").matcher(dat);
+        Matcher mclass = Pattern.compile("CLASS:? .|class:? .|Class:? .|Class:?.").matcher(dat);
         while (mclass.find()) {
             String cl = mclass.group(0);
             if (cl.length() > 0) {

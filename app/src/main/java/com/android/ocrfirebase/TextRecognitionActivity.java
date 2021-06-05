@@ -222,7 +222,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
 
         keyword = Arrays.asList("pennsylvania", "driver's", "drivers", "driver", "license", "visit", "dln",
                 "dob", "exp", "sex", "hgt", "eyes", "class", "end", "restr", "dups", "dd", "dl",
-                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced");
+                "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor", "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced", "dateofbirth");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -348,6 +348,18 @@ public class TextRecognitionActivity extends AppCompatActivity {
         Matcher mDL6 = Pattern.compile("E [0-9 ]{15}|e [0-9 ]{15}").matcher(dat);
         while (mDL6.find()) {
             json.put("DLN", mDL6.group(0).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 8
+        Matcher mDL8 = Pattern.compile("License No. [a-zA-Z0-9]*").matcher(dat);
+        while (mDL8.find()) {
+            json.put("DLN", mDL8.group(0).split("No.")[1].trim());
+        }
+
+        //DRIVER LICENSE NUMBER 9
+        Matcher mDL9 = Pattern.compile("LIC. NO. [a-zA-Z0-9-]*|LiC. NO. [a-zA-Z0-9-]*|lic. NO. [a-zA-Z0-9-]*").matcher(dat);
+        while (mDL9.find()) {
+            json.put("DLN", mDL9.group(0).split("NO.")[1].trim());
         }
 
         //DD

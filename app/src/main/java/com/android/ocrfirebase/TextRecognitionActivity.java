@@ -225,7 +225,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
                 "com", "iss", "usa", "No", "Restrictions", "height", ":", "none", "pa", "organ", "donor",
                 "commercial", "cdl", "driver", "MAINSTREET", "CLA", "signature", "donorr", "enhanced",
                 "dateofbirth", "auto","NOTINTENDED","FORFEDERAL", "PURPOSES", "not","intended","for",
-                "federal","NEW", "mexico","DRIVERLICENSE", "ego", "prize","alert", "hearing");
+                "federal","NEW", "mexico","DRIVERLICENSE", "ego", "prize","alert", "hearing", "class","DRIVERLICENSEE");
         ArrayList<String> keywords = new ArrayList<String>(keyword);
 
         //State
@@ -404,6 +404,12 @@ public class TextRecognitionActivity extends AppCompatActivity {
         Matcher mDL14 = Pattern.compile("LIC#[0-9A-Z].*$]").matcher(dat);
         while (mDL14.find()) {
             json.put("DLN", mDL14.group(0).substring(4).trim());
+        }
+
+        //DRIVER LICENSE NUMBER 15
+        Matcher mDL15 = Pattern.compile("S[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{3}-[0-9]|s[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{3}-[0-9]").matcher(dat);
+        while (mDL15.find()) {
+            json.put("DLN", mDL15.group(0).trim());
         }
 
         //DD

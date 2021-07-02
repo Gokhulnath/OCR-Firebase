@@ -208,7 +208,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
     }
 
     private String Extract_data(List<String> d, String dat) throws JSONException {
-        Log.d("fuck", d.toString());
+        Log.d("bug", d.toString());
         ArrayList<String> data = new ArrayList<String>(d);
         JSONObject json = new JSONObject();
         states = Arrays.asList("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
@@ -300,7 +300,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //DRIVER LICENSE NUMBER
         Matcher mDL = Pattern.compile("DLN:? .*(?! )|DL:? .*(?! )|DL NO.? .*(?! )|DL No.? .*(?! )|DLH:? .*(?! )|DL#:?.*(?! )").matcher(dat);
         while (mDL.find()) {
-            Log.d("fuck",mDL.group(0));
+            Log.d("bug",mDL.group(0));
             if(mDL.group(0).split(":").length!=1){
                 if(mDL.group(0).split(":")[1].trim().split(" ").length>1){
                     json.put("DLN", mDL.group(0).split(":")[1].trim().split(" ")[0]);
@@ -415,7 +415,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
         //DD
         Matcher mDD = Pattern.compile("DD:? .*").matcher(dat);
         while (mDD.find()) {
-            Log.d("fuck", mDD.group(0));
+            Log.d("bug", mDD.group(0));
             json.put("DD", mDD.group(0).split(" ")[1].trim());
         }
 
@@ -575,7 +575,7 @@ public class TextRecognitionActivity extends AppCompatActivity {
             data.set(j, end);
         }
 
-        Log.d("fuck", data.toString());
+        Log.d("bug", data.toString());
 
         //Name
         int flag = -1;
